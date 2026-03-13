@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Omoiyari Mimi</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap');
+
+  :root {
+    --cream: #FAF6EF;
+    --ink: #1A1410;
+    --teal: #2A7B74;
+    --teal-light: #3DA89F;
+    --teal-pale: #D6EFED;
+    --accent: #E8672A;
+    --accent-pale: #FAE5D8;
+    --gold: #C9A84C;
+    --shadow: rgba(26,20,16,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream); color: var(--ink);
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+  }
+
+  header {
+    width: 100%; background: var(--teal); color: white;
+    padding: 18px 32px; display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 2px 16px var(--shadow);
+  }
+  .logo-icon {
+    width: 44px; height: 44px; background: rgba(255,255,255,0.15);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+  header h1 { font-family: 'Noto Serif', serif; font-size: 1.4rem; font-weight: 700; }
+  header p { font-size: 0.78rem; opacity: 0.8; margin-top: 1px; }
+
+  main { width: 100%; max-width: 860px; padding: 28px 20px; display: flex; flex-direction: column; gap: 22px; }
+
+  /* Tabs */
+  .mode-tabs {
+    display: flex; background: white;
+    border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px var(--shadow);
+  }
+  .mode-tab {
+    flex: 1; padding: 16px; border: none; cursor: pointer;
+    background: transparent; font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem; font-weight: 600; color: #888;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.2s; border-bottom: 3px solid transparent;
+  }
+  .mode-tab.active { color: var(--teal); border-bottom-color: var(--teal); background: var(--teal-pale); }
+
+  /* Panels */
+  .input-panel {
+    background: white; border-radius: 20px; padding: 28px;
+    box-shadow: 0 4px 24px var(--shadow);
+    display: none; flex-direction: column; align-items: center; gap: 20px;
+  }
+  .input-panel.active { display: flex; }
+  .panel-title { font-family: 'Noto Serif', serif; font-size: 1.1rem; text-align: center; }
+
+  /* Record */
+  .record-btn {
+    width: 96px; height: 96px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--teal); color: white; font-size: 34px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 24px rgba(42,123,116,0.4);
+    transition: transform 0.15s; position: relative;
+  }
+  .record-btn:hover { transform: scale(1.06); }
+  .record-btn.recording {
+    background: #C0392B; box-shadow: 0 6px 24px rgba(192,57,43,0.5);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.07)} }
+  .record-btn .ripple {
+    position: absolute; inset: -8px; border-radius: 50%;
+    border: 3px solid #C0392B; opacity: 0;
+  }
+  .record-btn.recording .ripple { animation: ripple-out 1.2s ease-out infinite; }
+  @keyframes ripple-out { 0%{transform:scale(1);opacity:.6} 100%{transform:scale(1.5);opacity:0} }
+  .record-label { font-size: 0.9rem; color: #666; text-align: center; }
+  .record-label.active { color: #C0392B; font-weight: 600; }
+
+  .live-transcript {
+    width: 100%; background: #F5F5F0; border-radius: 12px;
+    padding: 14px 18px; font-size: 0.95rem; color: #444;
+    min-height: 64px; border: 1.5px solid #E0E0D8; line-height: 1.6; display: none;
+  }
+  .interim { color: #aaa; font-style: italic; }
+
+  /* Textarea */
+  .manual-textarea {
+    width: 100%; padding: 16px 18px;
+    border: 1.5px solid #E0E0D8; border-radius: 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 1rem; line-height: 1.6;
+    color: var(--ink); background: #F8F8F4; resize: vertical; min-height: 120px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .manual-textarea:focus { border-color: var(--teal); background: white; }
+  .manual-hint { font-size: 0.8rem; color: #999; text-align: center; }
+
+  /* Process btn */
+  .process-btn {
+    background: var(--accent); color: white; border: none; cursor: pointer;
+    padding: 14px 36px; border-radius: 50px;
+    font-size: 1rem; font-weight: 600; font-family: 'DM Sans', sans-serif;
+    box-shadow: 0 4px 16px rgba(232,103,42,0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: none; align-items: center; gap: 8px;
+  }
+  .process-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(232,103,42,0.45); }
+  .process-btn.visible { display: flex; }
+
+  .speech-warn {
+    background: var(--accent-pale); color: var(--accent);
+    border-radius: 10px; padding: 10px 16px; font-size: 0.85rem;
+    text-align: center; display: none;
+  }
+
+  /* Slideshow */
+  .slideshow-wrapper { display: none; flex-direction: column; gap: 18px; }
+  .slideshow-wrapper.visible { display: flex; }
+
+  .slideshow-panel {
+    background: var(--ink); border-radius: 24px;
+    padding: 52px 40px 40px; min-height: 290px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    box-shadow: 0 8px 40px rgba(26,20,16,0.28);
+  }
+  .slideshow-panel::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 15% 85%, rgba(42,123,116,0.2) 0%, transparent 55%),
+                radial-gradient(ellipse at 85% 15%, rgba(201,168,76,0.13) 0%, transparent 50%);
+  }
+
+  .slide-content {
+    position: relative; z-index: 1; text-align: center;
+    animation: slide-in 0.45s cubic-bezier(0.4,0,0.2,1);
+  }
+  @keyframes slide-in { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+  .slide-icon { font-size: 2.4rem; margin-bottom: 14px; display: block; }
+  .slide-text {
+    font-family: 'Noto Serif', serif; font-size: 3rem; font-weight: 700;
+    color: white; line-height: 1.2; max-width: 640px;
+  }
+  .slide-text .hl { color: var(--gold); }
+
+  .slide-counter {
+    position: absolute; top: 16px; right: 20px;
+    color: rgba(255,255,255,0.35); font-size: 0.8rem; z-index: 2;
+  }
+
+  .progress-track {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 5px; background: rgba(255,255,255,0.1);
+    border-radius: 0 0 24px 24px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: var(--teal-light);
+    transition: width linear;
+  }
+
+  .slide-dots { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #CCC; cursor: pointer; transition: all 0.2s; }
+  .dot.active { background: var(--teal); transform: scale(1.3); }
+
+  .controls { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .ctrl-btn {
+    background: white; border: 2px solid #E0E0D8; border-radius: 50px;
+    padding: 12px 22px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 7px; transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif; white-space: nowrap;
+  }
+  .ctrl-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .ctrl-btn.primary { background: var(--teal); color: white; border-color: var(--teal); }
+  .ctrl-btn.primary:hover { background: var(--teal-light); border-color: var(--teal-light); }
+  .ctrl-btn.muted { color: #999; }
+
+  .all-slides {
+    background: white; border-radius: 16px; padding: 22px;
+    box-shadow: 0 2px 14px var(--shadow); display: none;
+  }
+  .all-slides.visible { display: block; }
+  .all-slides h3 { font-family: 'Noto Serif', serif; font-size: 1rem; margin-bottom: 14px; }
+  .slide-list { display: flex; flex-direction: column; gap: 8px; }
+  .slide-item {
+    display: flex; gap: 12px; align-items: center;
+    padding: 11px 16px; background: var(--cream); border-radius: 10px;
+    border-left: 4px solid var(--teal); cursor: pointer; transition: background 0.15s;
+  }
+  .slide-item:hover, .slide-item.current { background: var(--teal-pale); }
+  .slide-item.current { border-left-color: var(--accent); }
+  .slide-item .si { font-size: 1.2rem; flex-shrink: 0; }
+  .slide-item .st { font-size: 1rem; font-weight: 500; }
+  .slide-item .st .kw { color: var(--teal); font-weight: 700; }
+
+  .loading-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(250,246,239,0.88); z-index: 100;
+    align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+  }
+  .loading-overlay.visible { display: flex; }
+  .spinner {
+    width: 50px; height: 50px; border: 4px solid var(--teal-pale);
+    border-top-color: var(--teal); border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .loading-text { font-size: 1rem; color: var(--teal); font-weight: 600; }
+
+  @media (max-width: 560px) {
+    .slide-text { font-size: 2.2rem; }
+    .slideshow-panel { padding: 44px 22px 36px; min-height: 240px; }
+    .ctrl-btn { padding: 10px 16px; font-size: 0.88rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">👂</div>
+  <div>
+    <h1>Omoiyari Mimi</h1>
+    <p>Asystent Komunikacji Bez Barier</p>
+  </div>
+</header>
+
+<main>
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tabMic" onclick="setMode('mic')">🎙️ Nagraj głos</button>
+    <button class="mode-tab" id="tabText" onclick="setMode('text')">⌨️ Wpisz tekst</button>
+  </div>
+
+  <!-- MIC -->
+  <div class="input-panel active" id="panelMic">
+    <div class="panel-title">Nagraj komunikat dla pacjenta</div>
+    <div class="speech-warn" id="speechWarn">
+      ⚠️ Rozpoznawanie mowy działa tylko w Chrome i Edge. Użyj trybu tekstowego lub zmień przeglądarkę.
+    </div>
+    <button class="record-btn" id="recordBtn" onclick="toggleRecord()">
+      <div class="ripple"></div>🎤
+    </button>
+    <div class="record-label" id="recordLabel">Naciśnij, aby nagrać</div>
+    <div class="live-transcript" id="liveTranscript"></div>
+    <button class="process-btn" id="processBtnMic" onclick="doProcess()">✨ Przetwórz dla pacjenta</button>
+  </div>
+
+  <!-- TEXT -->
+  <div class="input-panel" id="panelText">
+    <div class="panel-title">Wpisz komunikat dla pacjenta</div>
+    <textarea class="manual-textarea" id="manualInput"
+      placeholder="Np.: Wizyta u doktora Nowaka jest jutro w czwartek o 10:30, gabinet 7, pierwsze piętro. Proszę zabrać dowód osobisty i wyniki badań krwi."
+      oninput="onTextInput()"></textarea>
+    <div class="manual-hint">Wpisz treść, a aplikacja ułoży ją w czytelne slajdy dla pacjenta</div>
+    <button class="process-btn" id="processBtnText" onclick="doProcess()">✨ Przetwórz dla pacjenta</button>
+  </div>
+
+  <!-- SLIDESHOW -->
+  <div class="slideshow-wrapper" id="slideshowWrapper">
+    <div class="slideshow-panel">
+      <div class="slide-counter" id="slideCounter">1 / 1</div>
+      <div class="slide-content" id="slideContent">
+        <span class="slide-icon" id="slideIcon">📋</span>
+        <div class="slide-text" id="slideText"></div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="slide-dots" id="slideDots"></div>
+
+    <div class="controls">
+      <button class="ctrl-btn" onclick="prevSlide()">◀ Poprzedni</button>
+      <button class="ctrl-btn primary" id="playPauseBtn" onclick="togglePlayPause()">⏸ Pauza</button>
+      <button class="ctrl-btn" onclick="restartSlideshow()">🔁 Od nowa</button>
+      <button class="ctrl-btn muted" onclick="resetAll()">✖ Nowy komunikat</button>
+    </div>
+
+    <div class="all-slides" id="allSlides">
+      <h3>📋 Pełna treść komunikatu</h3>
+      <div class="slide-list" id="slideList"></div>
+    </div>
+  </div>
+</main>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Układam slajdy...</div>
+</div>
+
+<script>
+let mode = 'mic';
+let recognition = null;
+let isRecording = false;
+let finalTranscript = '';
+let slides = [];
+let currentSlide = 0;
+let slideshowInterval = null;
+let isPaused = false;
+const SLIDE_MS = 5000;
+
+// ── Tabs ──
+function setMode(m) {
+  mode = m;
+  ['mic','text'].forEach(x => {
+    document.getElementById('tab'+x.charAt(0).toUpperCase()+x.slice(1)).className = 'mode-tab'+(m===x?' active':'');
+    document.getElementById('panel'+x.charAt(0).toUpperCase()+x.slice(1)).className = 'input-panel'+(m===x?' active':'');
+  });
+}
+
+// ── Web Speech ──
+function initSpeech() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { document.getElementById('speechWarn').style.display='block'; return; }
+  recognition = new SR();
+  recognition.lang = 'pl-PL';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.onresult = e => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript + ' ';
+      else interim += e.results[i][0].transcript;
+    }
+    const el = document.getElementById('liveTranscript');
+    el.style.display = 'block';
+    el.innerHTML = finalTranscript + (interim ? `<span class="interim">${interim}</span>` : '');
+  };
+  recognition.onerror = () => stopRecording();
+  recognition.onend = () => { if (isRecording) recognition.start(); };
+}
+
+function toggleRecord() {
+  isRecording ? stopRecording() : startRecording();
+}
+function startRecording() {
+  if (!recognition) { initSpeech(); if (!recognition) return; }
+  finalTranscript = '';
+  document.getElementById('liveTranscript').style.display = 'block';
+  document.getElementById('liveTranscript').innerHTML = '';
+  document.getElementById('processBtnMic').classList.remove('visible');
+  recognition.start();
+  isRecording = true;
+  document.getElementById('recordBtn').className = 'record-btn recording';
+  document.getElementById('recordBtn').innerHTML = '<div class="ripple"></div>⏹';
+  document.getElementById('recordLabel').textContent = 'Nagrywa… naciśnij, aby zatrzymać';
+  document.getElementById('recordLabel').classList.add('active');
+}
+function stopRecording() {
+  if (recognition) recognition.stop();
+  isRecording = false;
+  document.getElementById('recordBtn').className = 'record-btn';
+  document.getElementById('recordBtn').innerHTML = '<div class="ripple"></div>🎤';
+  document.getElementById('recordLabel').textContent = 'Naciśnij, aby nagrać ponownie';
+  document.getElementById('recordLabel').classList.remove('active');
+  if (finalTranscript.trim().length > 4)
+    document.getElementById('processBtnMic').classList.add('visible');
+}
+
+function onTextInput() {
+  const v = document.getElementById('manualInput').value.trim();
+  document.getElementById('processBtnText').classList[v.length > 8 ? 'add' : 'remove']('visible');
+}
+
+// ── Build slides (no AI) ──
+function doProcess() {
+  const text = mode === 'mic'
+    ? finalTranscript.trim()
+    : document.getElementById('manualInput').value.trim();
+  if (!text) return;
+  document.getElementById('loadingOverlay').classList.add('visible');
+  setTimeout(() => {
+    slides = buildSlides(text);
+    document.getElementById('loadingOverlay').classList.remove('visible');
+    startSlideshow();
+  }, 500);
+}
+
+function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+function buildSlides(text) {
+  const sl = [];
+  const t = text;
+  const lo = t.toLowerCase();
+
+  sl.push({ icon:'😊', lines:['Dzień','dobry!'], hl:[] });
+
+  // Doctor
+  const doc = t.match(/(?:doktor[a]?\s+|dr\.?\s+)([A-ZŁŚŻŹĆĄĘ][a-złśżźćąę]+)/i);
+  if (doc) sl.push({ icon:'👨‍⚕️', lines:['Dr', doc[1]], hl:[doc[1]] });
+
+  // Day
+  const days = [['jutro','Jutro'],['pojutrze','Pojutrze'],['dzisiaj','Dzisiaj'],['poniedziałek','Poniedziałek'],['wtorek','Wtorek'],['środę','Środę'],['czwartek','Czwartek'],['piątek','Piątek'],['sobotę','Sobotę'],['niedzielę','Niedzielę']];
+  for (const [key,label] of days) {
+    if (lo.includes(key)) { sl.push({ icon:'📅', lines:['Data:', label], hl:[label] }); break; }
+  }
+
+  // Numeric date
+  const dn = t.match(/(\d{1,2})\s+(stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia)/i);
+  if (dn) sl.push({ icon:'📅', lines:[dn[1], cap(dn[2])], hl:[dn[1], cap(dn[2])] });
+
+  // Time digits
+  const tm = t.match(/(\d{1,2})[:\.](\d{2})/);
+  if (tm) {
+    sl.push({ icon:'🕙', lines:['Godzina', `${tm[1]}:${tm[2]}`], hl:[`${tm[1]}:${tm[2]}`] });
+  } else {
+    // Time words
+    const tw = t.match(/(ósmej|dziewiątej|dziesiątej|jedenastej|dwunastej|trzynastej|czternastej|piętnastej|szesnastej|siedemnastej)/i);
+    if (tw) sl.push({ icon:'🕙', lines:['Godzina', cap(tw[1])], hl:[cap(tw[1])] });
+  }
+
+  // Room
+  const rm = t.match(/gabinet[^\d]*(\d+)/i);
+  if (rm) sl.push({ icon:'🚪', lines:['Gabinet', rm[1]], hl:[rm[1]] });
+
+  // Floor
+  const fl = t.match(/(pierwsze|drugie|trzecie|czwarte|piąte|\d+\.?)\s*piętro/i);
+  if (fl) sl.push({ icon:'🏥', lines:[cap(fl[1]), 'piętro'], hl:[cap(fl[1])] });
+
+  // Documents
+  const docs = [
+    [/dowód osobisty/i, '🪪', ['Dowód','osobisty']],
+    [/karta.{0,12}ubezpieczeni/i, '💳', ['Karta','ubezpiecz.']],
+    [/wyniki badań/i, '🧪', ['Wyniki','badań']],
+    [/skierowanie/i, '📄', ['Skiero-','wanie']],
+    [/recepta/i, '💊', ['Recepta','']],
+  ];
+  for (const [rx, icon, lines] of docs) {
+    if (rx.test(t)) sl.push({ icon, lines, hl:[] });
+  }
+
+  // Poczekaj
+  if (/poczekalni/i.test(t)) sl.push({ icon:'🪑', lines:['Proszę','poczekać'], hl:[] });
+
+  // Fallback — if nothing extracted beyond greeting
+  if (sl.length <= 2) {
+    const sentences = t.split(/[.!?]+/).map(s=>s.trim()).filter(s=>s.length>4);
+    sentences.slice(0,5).forEach((s,i) => {
+      const icons = ['📋','ℹ️','📌','✅','🔹'];
+      const words = s.trim().split(/\s+/);
+      sl.push({ icon: icons[i]||'📋', lines: [words.slice(0,2).join(' '), words.slice(2,4).join(' ')], hl:[] });
+    });
+  }
+
+  sl.push({ icon:'👋', lines:['Do','zobaczenia!'], hl:[] });
+  return sl;
+}
+
+// ── Slideshow ──
+function startSlideshow() {
+  currentSlide = 0; isPaused = false;
+  document.getElementById('slideshowWrapper').classList.add('visible');
+  document.getElementById('processBtnMic').classList.remove('visible');
+  document.getElementById('processBtnText').classList.remove('visible');
+  renderSlide(); buildDots(); buildList(); scheduleNext();
+  document.getElementById('playPauseBtn').textContent = '⏸ Pauza';
+  document.getElementById('slideshowWrapper').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function renderSlide() {
+  const s = slides[currentSlide];
+  const el = document.getElementById('slideContent');
+  el.style.animation = 'none'; void el.offsetWidth;
+  el.style.animation = 'slide-in 0.45s cubic-bezier(0.4,0,0.2,1)';
+  document.getElementById('slideIcon').textContent = s.icon;
+
+  const html = s.lines.filter(Boolean).map(line => {
+    return line.split(' ').map(w => {
+      const clean = w.replace(/[.,!?:]/g,'');
+      return s.hl.some(h => clean.toLowerCase() === h.toLowerCase())
+        ? `<span class="hl">${w}</span>` : w;
+    }).join(' ');
+  }).join('<br>');
+
+  document.getElementById('slideText').innerHTML = html;
+  document.getElementById('slideCounter').textContent = `${currentSlide+1} / ${slides.length}`;
+  updateDots(); updateList(); animateProgress();
+}
+
+function animateProgress() {
+  const f = document.getElementById('progressFill');
+  f.style.transition = 'none'; f.style.width = '0%'; void f.offsetWidth;
+  f.style.transition = `width ${SLIDE_MS}ms linear`; f.style.width = '100%';
+}
+
+function scheduleNext() {
+  clearInterval(slideshowInterval);
+  slideshowInterval = setInterval(() => {
+    if (isPaused) return;
+    if (currentSlide < slides.length - 1) { currentSlide++; renderSlide(); }
+    else {
+      clearInterval(slideshowInterval); isPaused = true;
+      document.getElementById('playPauseBtn').textContent = '▶ Odtwórz';
+      document.getElementById('progressFill').style.transition = 'none';
+    }
+  }, SLIDE_MS);
+}
+
+function prevSlide() {
+  if (currentSlide > 0) { currentSlide--; renderSlide(); if (!isPaused) scheduleNext(); }
+}
+
+function togglePlayPause() {
+  isPaused = !isPaused;
+  document.getElementById('playPauseBtn').textContent = isPaused ? '▶ Odtwórz' : '⏸ Pauza';
+  if (!isPaused) {
+    if (currentSlide === slides.length-1) currentSlide = 0;
+    renderSlide(); scheduleNext();
+  } else {
+    clearInterval(slideshowInterval);
+    document.getElementById('progressFill').style.transition = 'none';
+  }
+}
+
+function restartSlideshow() {
+  clearInterval(slideshowInterval); currentSlide = 0; isPaused = false;
+  document.getElementById('playPauseBtn').textContent = '⏸ Pauza';
+  renderSlide(); scheduleNext();
+}
+
+function resetAll() {
+  clearInterval(slideshowInterval); slides = []; currentSlide = 0; finalTranscript = '';
+  document.getElementById('slideshowWrapper').classList.remove('visible');
+  document.getElementById('liveTranscript').style.display = 'none';
+  document.getElementById('liveTranscript').innerHTML = '';
+  document.getElementById('manualInput').value = '';
+  document.getElementById('processBtnMic').classList.remove('visible');
+  document.getElementById('processBtnText').classList.remove('visible');
+  document.getElementById('allSlides').classList.remove('visible');
+}
+
+function buildDots() {
+  const c = document.getElementById('slideDots'); c.innerHTML = '';
+  slides.forEach((_,i) => {
+    const d = document.createElement('div');
+    d.className = 'dot'+(i===0?' active':'');
+    d.onclick = () => { currentSlide=i; renderSlide(); if(!isPaused) scheduleNext(); };
+    c.appendChild(d);
+  });
+}
+function updateDots() {
+  document.querySelectorAll('.dot').forEach((d,i) => d.className='dot'+(i===currentSlide?' active':''));
+}
+
+function buildList() {
+  const list = document.getElementById('slideList'); list.innerHTML = '';
+  slides.forEach((s,i) => {
+    const item = document.createElement('div');
+    item.className = 'slide-item'+(i===currentSlide?' current':'');
+    item.onclick = () => { currentSlide=i; renderSlide(); if(!isPaused) scheduleNext(); };
+    const txt = s.lines.join(' ');
+    const words = txt.split(' ').map(w => {
+      const clean = w.replace(/[.,!?:]/g,'');
+      return s.hl.some(h=>clean.toLowerCase()===h.toLowerCase()) ? `<span class="kw">${w}</span>` : w;
+    }).join(' ');
+    item.innerHTML = `<div class="si">${s.icon}</div><div class="st">${words}</div>`;
+    list.appendChild(item);
+  });
+  document.getElementById('allSlides').classList.add('visible');
+}
+function updateList() {
+  document.querySelectorAll('.slide-item').forEach((el,i) => {
+    el.className = 'slide-item'+(i===currentSlide?' current':'');
+  });
+}
+
+initSpeech();
+</script>
+</body>
+</html>
